@@ -94,6 +94,7 @@ const Peer = window.Peer;
       
       this.mediaRecorder.onstop = (event) => {
         console.log("stop Recording", this.id);
+        console.log("start Downloading", this.id);
         this.download(stream, this.id);
       }
 
@@ -102,9 +103,7 @@ const Peer = window.Peer;
     }
 
     stop(){
-      console.log('Start Downloading ', this.id);
-      this.mediaRecorder.stop();
-      console.log('Stop Downloading ', this.id);
+      if(this.mediaRecorder.state == recording) this.mediaRecorder.stop();
     }
 
     download(stream, fname){
