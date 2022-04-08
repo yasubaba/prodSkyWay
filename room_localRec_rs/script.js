@@ -102,7 +102,9 @@ const Peer = window.Peer;
     }
 
     stop(){
-      this.mediaRecorder.stop()
+      console.log(Start Downloading, this.id);
+      this.mediaRecorder.stop();
+      console.log(Stop Downloading, this.id);
     }
 
     download(stream, fname){
