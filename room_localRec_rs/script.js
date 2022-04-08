@@ -103,7 +103,7 @@ const Peer = window.Peer;
     }
 
     stop(){
-      if(this.mediaRecorder.state == recording) this.mediaRecorder.stop();
+      if(this.mediaRecorder.state == 'recording') this.mediaRecorder.stop();
     }
 
     download(stream, fname){
