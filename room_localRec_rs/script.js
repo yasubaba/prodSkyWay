@@ -115,7 +115,7 @@ const Peer = window.Peer;
       a.href = url;
       a.download = `${fname}.webm`;
       document.body.appendChild(a);
-      a.click();
+      a.click(), this.id;
       setTimeout(() => {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
@@ -193,6 +193,10 @@ const Peer = window.Peer;
 
     // for closing myself
     room.once('close', () => {
+      remoteRecorder.forEach( object => {
+        object.recorder.stop();
+      });
+
       sendTrigger.removeEventListener('click', onClickSend);
       messages.textContent += '== You left ===\n';
       Array.from(remoteVideos.children).forEach(remoteVideo => {
@@ -204,9 +208,9 @@ const Peer = window.Peer;
 
     sendTrigger.addEventListener('click', onClickSend);
     leaveTrigger.addEventListener('click', () => {
-      room.close();
       localRecorder.stop();//mediaRecorder.stop();
 
+      room.close();
       }
     , { once: true });
 
