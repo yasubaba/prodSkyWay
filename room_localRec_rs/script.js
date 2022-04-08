@@ -14,6 +14,7 @@ const Peer = window.Peer;
   const sdkSrc = document.querySelector('script[src*=skyway]');
   const ECFlag = document.getElementById('js-EC-flag');
   const NSFlag = document.getElementById('js-NS-flag');
+  const dlArea = document.getElementById('js-downloadButton-area');
 
   meta.innerText = `
     UA: ${navigator.userAgent}
@@ -110,15 +111,18 @@ const Peer = window.Peer;
       const downloadBlob= new Blob(this.blobs, {type: 'video/VP8'});
       const url = window.URL.createObjectURL(downloadBlob);
       const a = document.createElement('a');
-      a.style.display = 'none';
+      a.style.display = 'block';
       a.href = url;
       a.download = `${fname}.webm`;
-      document.body.appendChild(a);
-      a.click(), this.id;
+      a.textContent = this.id;
+      dlArea.appendChild(a);
+      /*
+      a.click();
       setTimeout(() => {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
       }, 100);
+      */
     }
   }
 
