@@ -172,6 +172,12 @@ const Peer = window.Peer;
 
     // for closing room members
     room.on('peerLeave', peerId => {
+      // Stop Remote Recorder
+      remoteRecorder.forEach( object => {
+        if(object.peerId == peerId) object.recorder.stop();
+      });
+
+      // remove Video object
       const remoteVideo = remoteVideos.querySelector(
         `[data-peer-id="${peerId}"]`
       );
@@ -179,9 +185,6 @@ const Peer = window.Peer;
       remoteVideo.srcObject = null;
       remoteVideo.remove();
 
-      remoteRecorder.forEach( object => {
-        if(object.peerId == peerId) object.recorder.stop();
-      });
 
       messages.textContent += `=== ${peerId} left ===\n`;
     });
