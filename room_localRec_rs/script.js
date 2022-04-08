@@ -69,14 +69,14 @@ const Peer = window.Peer;
 
 
   // Render local stream
-  localVideo.muted = true;
-  localVideo.srcObject = localStream;
-  localVideo.playsInline = true;
-  await localVideo.play().catch(console.error);
+  //localVideo.muted = true;
+  //localVideo.srcObject = localStream;
+  //localVideo.playsInline = true;
+  //await localVideo.play().catch(console.error);
 
   // eslint-disable-next-line require-atomic-updates
   const peer = (window.peer = new Peer({
-    key: window.__SKYWAY_KEY__,
+    key: '347195cf-26f8-4ed1-8090-6d21fe02d108',
     debug: 3,
   }));
 
@@ -228,3 +228,4 @@ const Peer = window.Peer;
 
   peer.on('error', console.error);
 })();
+
