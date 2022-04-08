@@ -82,9 +82,10 @@ const Peer = window.Peer;
   //MediaStream Recording with Browser API
   class Recorder{
 //  async function startRecording(stream){
-    constructor(stream){
+    constructor(stream, peerId){
       this.blobs = [];
       this.mediaRecorder = new MediaRecorder(stream);
+      this.id = peerId;
       
       this.mediaRecorder.ondataavailable = (event) => {
         if(event.data && event.data.size > 0){
@@ -93,7 +94,7 @@ const Peer = window.Peer;
       
       this.mediaRecorder.onstop = (event) => {
         console.log("stop Recording");
-        this.download(stream);
+        this.download(stream, this.id);
       }
 
       this.mediaRecorder.start();
@@ -104,13 +105,13 @@ const Peer = window.Peer;
       this.mediaRecorder.stop()
     }
 
-    download(stream){
+    download(stream, fname){
       const downloadBlob= new Blob(this.blobs, {type: 'video/VP8'});
       const url = window.URL.createObjectURL(downloadBlob);
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `${stream.id}.webm`;
+      a.download = `${fname}.webm`;
       document.body.appendChild(a);
       a.click();
       setTimeout(() => {
@@ -128,7 +129,7 @@ const Peer = window.Peer;
       return;
     }
 
-    const localRecorder = new Recorder(localStream4Rec);
+    const localRecorder = new Recorder(localStream4Rec, peer.id);
     const remoteRecorder = [];
 
     const room = peer.joinRoom(roomId.value, {
@@ -157,7 +158,7 @@ const Peer = window.Peer;
 
       remoteRecorder.push({
         peerId: stream.peerId,
-        recorder: new Recorder(remoteStream4Rec),
+        recorder: new Recorder(remoteStream4Rec, stream.peerId),
       });
 
       console.log(remoteRecorder);
