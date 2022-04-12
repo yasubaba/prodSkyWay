@@ -155,7 +155,7 @@ const Peer = window.Peer;
 
     // Render remote stream for new peer join in the room
     room.on('stream', async stream => {
-      const remoteStream4Rec = stream.clone();
+      const remoteStream4Rec = new MediaStream(stream.getAudioTracks());
 
       const container = document.createElement('div');
       // mark peerId to find it later at peerLeave event
