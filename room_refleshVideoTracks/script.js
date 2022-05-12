@@ -71,10 +71,10 @@ const Peer = window.Peer;
     // Render remote stream for new peer join in the room
     room.on('stream', async stream => {
 
-      localStream.getVideoTracks().forEach( track => {
-        track.enable = false;
-        track.enable = true;
-        console.log('reflesh video stream track');
+      await localStream.getVideoTracks().forEach( track => {
+        track.enabled = false;
+        track.enabled = true;
+        //room.replaceStream(localStream);
       });
 
       const container = document.createElement('div');
