@@ -139,6 +139,7 @@ const Peer = window.Peer;
     document.getElementById('js-videoEnabled').addEventListener('click', () => {
       localStream.getVideoTracks().forEach( track => {
         track.enabled = !track.enabled;
+        track.enabled = !track.enabled;
         //room.replaceStream(localStream);
       });
     });
