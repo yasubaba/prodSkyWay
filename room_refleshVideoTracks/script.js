@@ -2,10 +2,9 @@ const Peer = window.Peer;
 
 (async function main() {
   const localVideo = document.getElementById('js-local-stream');
+  const textMyPId = document.getElementById('js-myPId');
   const joinTrigger = document.getElementById('js-join-trigger');
   const leaveTrigger = document.getElementById('js-leave-trigger');
-  const switchTrigger = document.getElementById('js-switch-trigger');
-  const switchRadio = document.getElementsByName('js-switch-radio');
   const remoteVideos = document.getElementById('js-remote-streams');
   const roomId = document.getElementById('js-room-id');
   const roomMode = document.getElementById('js-room-mode');
@@ -34,21 +33,6 @@ const Peer = window.Peer;
       video: true,
     })
     .catch(console.error);
-  let dummy = false;
-
-  //Create Dummy Stream
-  const dummyStream = new MediaStream();
-  // DummyはAudioだけで良さそうなのでコメントアウト
-  //const canvas = document.createElement('canvas');
-  //const dummyVideoStream = canvas.captureStream(30);
-
-  //Create Audio Stream
-  const audioCtx = new(window.AudioContext || window.webkitAudioContext);
-  const dummyAudioStream = audioCtx.createMediaStreamDestination().stream.getAudioTracks()[0];
-
-  dummyStream.addTrack(localStream.getVideoTracks()[0]);
-  //dummyStream.addTrack(dummyVideoStream);
-  dummyStream.addTrack(dummyAudioStream);
 
   // Render local stream
   localVideo.muted = true;
@@ -62,8 +46,10 @@ const Peer = window.Peer;
     debug: 3,
   }));
 
+  peer.once('open', () => textMyPId.textContent = peer.id);
+
   // Register join handler
-  joinTrigger.addEventListener('click', () => {
+  joinTrigger.addEventListener('click', async () => {
     // Note that you need to ensure the peer has connected to signaling server
     // before using methods of peer instance.
     if (!peer.open) {
@@ -84,13 +70,29 @@ const Peer = window.Peer;
 
     // Render remote stream for new peer join in the room
     room.on('stream', async stream => {
+
+      localStream.getVideoTracks().forEach( track => {
+        track.enable = false;
+        track.enable = true;
+        console.log('reflesh video stream track');
+      });
+
+      const container = document.createElement('div');
+      // mark peerId to find it later at peerLeave event
+      container.setAttribute('data-peer-id', stream.peerId);
+      remoteVideos.append(container);
+
+      // create a <Video> Object to play remote Video
       const newVideo = document.createElement('video');
       newVideo.srcObject = stream;
       newVideo.playsInline = true;
-      // mark peerId to find it later at peerLeave event
-      newVideo.setAttribute('data-peer-id', stream.peerId);
-      remoteVideos.append(newVideo);
+      container.append(newVideo);
       await newVideo.play().catch(console.error);
+
+      // create a <label> Object to appear the peerId
+      const text_pId = document.createElement('label');
+      text_pId.textContent = stream.peerId;
+      container.append(text_pId);
     });
 
     room.on('data', ({ data, src }) => {
@@ -100,12 +102,19 @@ const Peer = window.Peer;
 
     // for closing room members
     room.on('peerLeave', peerId => {
-      const remoteVideo = remoteVideos.querySelector(
+      const remoteObjects = remoteVideos.querySelector(
         `[data-peer-id="${peerId}"]`
       );
-      remoteVideo.srcObject.getTracks().forEach(track => track.stop());
-      remoteVideo.srcObject = null;
-      remoteVideo.remove();
+
+      Array.from(remoteObjects.children).forEach( item => {
+        if(item.nodeName == 'VIDEO'){
+          item.srcObject.getTracks().forEach(track => track.stop());
+          item.srcObject = null;
+        }
+        item.remove();
+      });
+
+      remoteObjects.remove();
 
       messages.textContent += `=== ${peerId} left ===\n`;
     });
@@ -114,22 +123,19 @@ const Peer = window.Peer;
     room.once('close', () => {
       sendTrigger.removeEventListener('click', onClickSend);
       messages.textContent += '== You left ===\n';
-      Array.from(remoteVideos.children).forEach(remoteVideo => {
-        remoteVideo.srcObject.getTracks().forEach(track => track.stop());
-        remoteVideo.srcObject = null;
-        remoteVideo.remove();
+      Array.from(remoteVideos.children).forEach(containers => {
+        Array.from(containers.children).forEach( item => {
+          if(item.nodeName == 'VIDEO'){
+            item.srcObject.getTracks().forEach(track => track.stop());
+            item.srcObject = null;
+          }
+          item.remove();
+        });
       });
     });
 
-
     sendTrigger.addEventListener('click', onClickSend);
     leaveTrigger.addEventListener('click', () => room.close(), { once: true });
-    switchTrigger.addEventListener('click', () => {
-      console.log('switch Stream');
-      dummy ? room.replaceStream(localStream) : room.replaceStream(dummyStream);
-      dummy = !dummy;
-      console.log('dummy:', dummy);
-    });
 
     function onClickSend() {
       // Send message to all of the peers in the room via websocket
@@ -140,5 +146,9 @@ const Peer = window.Peer;
     }
   });
 
-  peer.on('error', console.error);
+  peer.on("error", (error) => {
+    console.error;
+    console.log(`${error.type}: ${error.message}`);
+    if(error.type == 'room-error') console.log('A room-error has occored');
+  });
 })();
