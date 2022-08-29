@@ -3,162 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <title>Authentication Sample</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.webrtc.ecl.ntt.com/skyway-latest.js"></script>
     <script src="../shared/key.js"></script>
-    <script>
-        const peerId = 'TestPeerID';
-        const apikey = window.__SKYWAY_KEY__;
-        const localVideo = document.getElementById('js-local-stream');
-        const btn_joinRoom = document.getElementById('join-room');
-        const remoteVideos = document.getElementById('js-remote-streams');
-
-        $('document').ready(async function() {
-          
-          const localStream =  navigator.mediaDevices
-            .getUserMedia({
-              audio: true,
-              video: false,
-            }).catch(console.error);
-
-          // Render local stream
-          localVideo.muted = true;
-          localVideo.srcObject = localStream;
-          localVideo.playsInline = true;
-          localVideo.play().catch(console.error);
-          
-
-          $('#get-btn').click(function() {
-            let gcredential;
-            $.post('http://localhost:8080/authenticate',
-              {
-                peerId: peerId,
-                sessionToken: '4CXS0f19nvMJBYK05o3toTWtZF5Lfd2t6Ikr2lID'
-              }, function(credential) {
-                $('#result').text(JSON.stringify(credential, null, 2));
-                gcredential = credential;
-              }
-            ).fail(function() {
-              alert('Peer Authentication Failed');
-            });
-
-            // use the credential to create new Peer() here.
-            const peer = new Peer(peerId, {
-              key: apikey,
-              credential: gcredential,
-            });
-
-            peer.on('open', function() {
-              console.log('peer.open');
-            });
-
-            peer.on('expiresin', function(sec) {
-              // Create new credential and Update the credential here.
-              console.log('the credential is expired in'+sec);
-              $.post('http://localhost:8080/authenticate',
-                {
-                  peerId: peerId,
-                  sessionToken: '4CXS0f19nvMJBYK05o3toTWtZF5Lfd2t6Ikr2lID'
-                }, function(credential){
-                  console.log('Success updating Credential.');
-                  $('#result').text(JSON.stringify(credential, null, 2));
-                  peer.updateCredential(credential);
-                }
-              );
-            });
-
-
-//
-            peer.on('error', function(error) {
-              // When there is an error and you need to start from the beginning,
-              // make sure to get a new credential from the server.
-              console.log(`${error.type}: ${error.message}`);
-            });
-            $('#check-peer').click(function() {
-              if(typeof(peer.open) === 'boolean'){
-                console.log('peer status:'+peer.open);
-              }
-            });
-          });
-
-          $('join-room').click(function() {
-
-    const room = peer.joinRoom('testroom', {
-      //mode: getRoomModeByHash(),
-      mode: 'sfu',
-      stream: localStream,
-    });
-
-    room.on('log', log => {
-      console.log('getLog:'+log);
-    });
-
-    room.once('open', () => {
-      console.log('=== You joined ===');
-    });
-    room.on('peerJoin', peerId => {
-      console.log(`=== ${peerId} joined ===`);
-      room.getLog();
-    });
-
-    // Render remote stream for new peer join in the room
-    room.on('stream', async stream => {
-      const newVideo = document.createElement('video');
-      newVideo.srcObject = stream;
-      newVideo.playsInline = true;
-      // mark peerId to find it later at peerLeave event
-      newVideo.setAttribute('data-peer-id', stream.peerId);
-      remoteVideos.append(newVideo);
-      await newVideo.play().catch(console.error);
-      console.log('room.on stream');
-      room.getLog();
-    });
-
-    room.on('data', ({ data, src }) => {
-      // Show a message sent to the room and who sent
-      console.log(`${src}: ${data}`);
-      room.getLog();
-    });
-
-    // for closing room members
-    room.on('peerLeave', peerId => {
-      const remoteVideo = remoteVideos.querySelector(
-        `[data-peer-id=${peerId}]`
-      );
-      remoteVideo.srcObject.getTracks().forEach(track => track.stop());
-      remoteVideo.srcObject = null;
-      remoteVideo.remove();
-
-      console.log('room.on peerLeave');
-      room.getLog();
-    });
-
-    // for closing myself
-    room.once('close', () => {
-      Array.from(remoteVideos.children).forEach(remoteVideo => {
-        remoteVideo.srcObject.getTracks().forEach(track => track.stop());
-        remoteVideo.srcObject = null;
-        remoteVideo.remove();
-      });
-      console.log('room.once close');
-      room.getLog();
-    });
-
-    $('leave-room').click(function(){
-       room.close();
-    });
-  });
-  });
-    </script>
+    <script src="./script.js"></script>
 </head>
 <body>
-<video id="js-local-stream"></video>
-<input type="button" id="get-btn" value="Get Credential">
-<input type="button" id="check-peer" value="Check peer status">
-<input type="button" id="join-room" value="Join Room">
-<input type="button" id="leave-room" value="Leave Room">
+  <div id="localObjects">
+    <video id="local-video"></video>
+    <video id="remote-video"></video>
+  </div>
+  <div id="controlObjects">
+    <input type="button" id="get-btn" value="Get Credential"></input>
+    <input type="button" id="check-peer" value="Check peer status"></input>
+    <input type="text" id="myId" value="defaultId"></input>
+  </div>
+  <div id="callObjects">
+    <input type="button" id="call-btn" value="Call"></input>
+    <input type="text" id="remoteId" value=""></input>
+  </div>
 <pre id="result"></pre>
-<div class="remote-streams" id="js-remote-streams"></div>
+<div class="remote-streams" id="remote-streams"></div>
 </body>
 </html>
 

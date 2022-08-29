@@ -5,7 +5,7 @@
  *         replace with your own values         *
  ************************************************/
 
-define('SECRETKEY', 'zyWYB7VF5hLH28gdwExQXpayrBQbquw9'); // replace with your own secretKey from the dashboard
+define('SECRETKEY', 'jfJFLYuUKGoecHsDMBbCTatSRFbHNgwS'); // replace with your own secretKey from the dashboard
 define('CREDENTIALTTL', 900); // 1 hour
 
 /************************************************
